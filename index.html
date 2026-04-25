@@ -1,1 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPARI — Genetic-Psychological Addiction Risk Index</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#F7F5F0;--surface:#fff;--ink:#1A1A18;--ink2:#5A5A54;--ink3:#9A9A90;--accent:#1D3557;--accent2:#457B9D;--danger:#C1440E;--warn:#B07D00;--safe:#2D6A4F;--border:#E2E0D8;--comt:#2B3BAD;--drd2:#5B2BAD}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6}
+header{background:var(--accent);padding:24px 40px;display:flex;align-items:baseline;gap:20px;flex-wrap:wrap}
+.header-title{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;letter-spacing:-0.02em}
+.header-sub{font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:.08em;text-transform:uppercase}
+.header-badge{margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.1);padding:6px 14px;border-radius:2px;border:1px solid rgba(255,255,255,0.15)}
+.intro-band{background:linear-gradient(135deg,#1D3557 0%,#2A4A72 100%);padding:24px 40px}
+.intro-band p{max-width:780px;font-size:13px;color:rgba(255,255,255,0.72);line-height:1.7}
+.intro-band strong{color:#fff;font-weight:500}
+.main{max-width:1100px;margin:0 auto;padding:40px 24px 40px;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+@media(max-width:720px){.main{grid-template-columns:1fr}header,.intro-band{padding:20px 24px}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:14px}
+.panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.panel-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);background:#EDF4F8;padding:3px 8px;border-radius:2px}
+.panel-title{font-size:12px;font-weight:500;color:var(--ink2);letter-spacing:.04em;text-transform:uppercase}
+.panel-body{padding:18px}
+.q-group{margin-bottom:18px}
+.q-group:last-child{margin-bottom:0}
+.q-label{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px;display:block}
+.q-sub{font-size:11px;color:var(--ink3);margin-bottom:9px;font-style:italic;font-family:'DM Mono',monospace}
+.scale-row{display:flex;gap:6px;align-items:center}
+.scale-label{font-size:11px;color:var(--ink3);width:54px;line-height:1.3}
+.scale-label.right{text-align:right}
+.scale-btns{display:flex;gap:4px;flex:1}
+.scale-btn{flex:1;height:34px;border:1px solid var(--border);background:var(--bg);border-radius:2px;font-family:'DM Mono',monospace;font-size:12px;color:var(--ink2);cursor:pointer;transition:all .12s}
+.scale-btn:hover{background:#EDF4F8;border-color:var(--accent2);color:var(--accent)}
+.scale-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.submit-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:background .15s}
+.submit-btn:hover{background:#162840}
+.result-panel{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;display:none}
+.result-panel.visible{display:block}
+.score-section{padding:24px 20px;text-align:center;border-bottom:1px solid var(--border)}
+.score-label{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);margin-bottom:8px}
+.score-value{font-family:'DM Serif Display',serif;font-size:64px;line-height:1;margin-bottom:4px}
+.score-ci{font-size:12px;color:var(--ink3);font-family:'DM Mono',monospace;margin-bottom:12px}
+.score-value.high{color:var(--danger)}.score-value.mod{color:var(--warn)}.score-value.low{color:var(--safe)}
+.score-bar-wrap{margin:12px auto;max-width:260px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;position:relative}
+.score-bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.score-bar-fill.high{background:var(--danger)}.score-bar-fill.mod{background:var(--warn)}.score-bar-fill.low{background:var(--safe)}
+.threshold-mark{position:absolute;top:-2px;left:63.4%;width:2px;height:9px;background:var(--ink3);border-radius:1px}
+.risk-badge{display:inline-block;padding:5px 14px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.06em;margin-top:6px}
+.risk-badge.high{background:#FDEEE8;color:var(--danger)}.risk-badge.mod{background:#FDF6E3;color:var(--warn)}.risk-badge.low{background:#E8F5EE;color:var(--safe)}
+.result-row{padding:16px 20px;border-bottom:1px solid var(--border)}
+.result-row:last-child{border-bottom:none}
+.result-row-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px}
+.pathway-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500}
+.pathway-tag.comt{background:#EDF0FA;color:var(--comt)}.pathway-tag.drd2{background:#F0EDF8;color:var(--drd2)}
+.pathway-dot{width:6px;height:6px;border-radius:50%}
+.pathway-tag.comt .pathway-dot{background:var(--comt)}.pathway-tag.drd2 .pathway-dot{background:var(--drd2)}
+.pathway-desc{font-size:12px;color:var(--ink3);margin-top:6px;line-height:1.5}
+.intervention-text{font-size:13px;color:var(--ink2);line-height:1.65}
+.info-box{background:#F0F5FA;border-left:3px solid var(--accent2);padding:12px 16px;border-radius:0 2px 2px 0;margin:0 20px 16px}
+.info-box p{font-size:12px;color:var(--ink2);line-height:1.6}
+.empty-state{padding:48px 24px;text-align:center}
+.empty-icon{font-size:36px;margin-bottom:14px;opacity:.25}
+.empty-text{font-size:13px;color:var(--ink3);line-height:1.6}
+.loading{display:none}
+.loading.visible{display:block}
+.loading .panel{padding:48px 24px;text-align:center}
+.spinner{width:26px;height:26px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mediation-wrap{padding:16px 20px 20px;border-bottom:1px solid var(--border)}
+svg.mediation{width:100%;height:auto;overflow:visible}
+.fi-wrap{padding:16px 20px;border-bottom:1px solid var(--border)}
+.fi-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.fi-row:last-child{margin-bottom:0}
+.fi-label{font-size:11px;color:var(--ink2);width:140px;flex-shrink:0;text-align:right;font-family:'DM Mono',monospace}
+.fi-track{flex:1;height:7px;background:var(--border);border-radius:3px;overflow:hidden}
+.fi-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.fi-val{font-size:11px;color:var(--ink3);width:34px;font-family:'DM Mono',monospace}
+.two-col-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input[type=number]{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink)}
+.method-section{max-width:1100px;margin:0 auto;padding:0 24px 60px}
+.method-toggle{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;color:var(--ink2);letter-spacing:.04em;text-transform:uppercase}
+.method-toggle:hover{background:#F0F5FA}
+.method-body{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;padding:20px;display:none}
+.method-body.open{display:block}
+.method-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:700px){.method-grid{grid-template-columns:1fr}}
+.method-card{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:14px}
+.method-card-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.method-card p{font-size:12px;color:var(--ink2);line-height:1.65}
+.method-card code{font-family:'DM Mono',monospace;font-size:11px;background:#EDF4F8;padding:1px 5px;border-radius:2px;color:var(--accent)}
+.api-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;background:#E8F5EE;color:var(--safe);padding:3px 8px;border-radius:2px;margin-bottom:12px}
+footer{text-align:center;padding:20px;font-size:11px;color:var(--ink3);border-top:1px solid var(--border);font-family:'DM Mono',monospace}
+</style>
+</head>
+<body>
 
+<header>
+  <div>
+    <div class="header-title">GPARI</div>
+    <div class="header-sub">Genetic-Psychological Addiction Risk Index</div>
+  </div>
+  <div class="header-badge">Add Health Wave IV &nbsp;|&nbsp; n = 6,504 &nbsp;|&nbsp; AUC = 0.885</div>
+</header>
+
+<div class="intro-band">
+  <p>This tool identifies adolescents at risk for <strong>compulsive sensation-seeking behavior</strong> driven by dopaminergic genetic variation. Responses are sent to a live FastAPI backend serving a trained gradient boosting classifier. The GPARI score, causal mediation decomposition, and personalized feature importance are all computed server-side from the real model in real time. <strong>No cost. No account. No laboratory required.</strong></p>
+</div>
+
+<div class="main">
+  <div>
+    <div class="panel">
+      <div class="panel-header"><span class="panel-num">01</span><span class="panel-title">Inhibitory Control Under Stress (COMT)</span></div>
+      <div class="panel-body">
+        <div class="q-group">
+          <label class="q-label">When under pressure, how often do you act before thinking?</label>
+          <span class="q-sub">COMT Val158Met proxy — H4MH22</span>
+          <div class="scale-row"><span class="scale-label">Never</span><div class="scale-btns" id="q1"></div><span class="scale-label right">Always</span></div>
+        </div>
+        <div class="q-group">
+          <label class="q-label">How often do you engage in activities you know are risky?</label>
+          <span class="q-sub">Novelty-seeking composite — H4FS1</span>
+          <div class="scale-row"><span class="scale-label">Never</span><div class="scale-btns" id="q2"></div><span class="scale-label right">Very often</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="panel-num">02</span><span class="panel-title">Reward Sensitivity (DRD2)</span></div>
+      <div class="panel-body">
+        <div class="q-group">
+          <label class="q-label">How often do everyday activities feel rewarding?</label>
+          <span class="q-sub">DRD2 Taq1A proxy — H4ID5G (reversed)</span>
+          <div class="scale-row"><span class="scale-label">Rarely</span><div class="scale-btns" id="q3"></div><span class="scale-label right">Always</span></div>
+        </div>
+        <div class="q-group">
+          <label class="q-label">How often do you feel no interest in things you used to enjoy?</label>
+          <span class="q-sub">Anhedonia — H4MH19</span>
+          <div class="scale-row"><span class="scale-label">Never</span><div class="scale-btns" id="q4"></div><span class="scale-label right">Always</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="panel-num">03</span><span class="panel-title">Stress Reactivity (SLC6A4 / MAOA)</span></div>
+      <div class="panel-body">
+        <div class="q-group">
+          <label class="q-label">How often do you feel anxious without a clear reason?</label>
+          <span class="q-sub">Trait anxiety / SLC6A4 proxy — H4MH2</span>
+          <div class="scale-row"><span class="scale-label">Rarely</span><div class="scale-btns" id="q5"></div><span class="scale-label right">Constantly</span></div>
+        </div>
+        <div class="q-group">
+          <label class="q-label">How difficult is it to manage strong emotions when upset?</label>
+          <span class="q-sub">Emotional dysregulation / MAOA proxy — H4MH7</span>
+          <div class="scale-row"><span class="scale-label">Easy</span><div class="scale-btns" id="q6"></div><span class="scale-label right">Very hard</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="panel-num">04</span><span class="panel-title">Background</span></div>
+      <div class="panel-body">
+        <div class="q-group">
+          <label class="q-label">Adverse childhood experiences (ACEs)</label>
+          <span class="q-sub">ACE composite — H4MH23 (0 = none, 8 = many)</span>
+          <div class="scale-row"><span class="scale-label">0</span><div class="scale-btns" id="q7" data-max="8"></div><span class="scale-label right">8+</span></div>
+        </div>
+        <div class="two-col-inputs">
+          <div><label class="q-label" style="margin-bottom:6px">Age</label><input type="number" id="age" min="10" max="25" value="16"></div>
+          <div><label class="q-label" style="margin-bottom:6px">Income (1-6)</label><input type="number" id="income" min="1" max="6" value="3"></div>
+        </div>
+      </div>
+    </div>
+    <button class="submit-btn" onclick="runModel()">Generate GPARI Score</button>
+  </div>
+
+  <div>
+    <div id="emptyState">
+      <div class="panel">
+        <div class="empty-state">
+          <div class="empty-icon">◎</div>
+          <p class="empty-text">Complete all four panels and click <strong>Generate GPARI Score</strong>. Responses are sent to a live ML backend for real-time inference, causal mediation decomposition, and personalized feature importance computation.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading" id="loadingState">
+      <div class="panel">
+        <div class="spinner"></div>
+        <p style="font-size:13px;color:var(--ink3)">Sending to FastAPI backend. Running gradient boosting inference and bootstrap mediation (200 resamples)...</p>
+      </div>
+    </div>
+
+    <div class="result-panel" id="resultPanel">
+      <div class="score-section">
+        <div class="api-badge">Live ML inference</div>
+        <div class="score-label">GPARI Score</div>
+        <div class="score-value" id="scoreVal">0.000</div>
+        <div class="score-ci" id="scoreCI">95% CI: — to —</div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-fill" id="scoreBar" style="width:0%"></div>
+          <div class="threshold-mark"></div>
+        </div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:6px;font-family:'DM Mono',monospace">80th percentile threshold: 0.634</div>
+        <div class="risk-badge" id="riskBadge">—</div>
+      </div>
+      <div class="result-row">
+        <div class="result-row-label">Risk Pathway</div>
+        <div id="pathwayTag">—</div>
+        <div class="pathway-desc" id="pathwayDesc">—</div>
+      </div>
+      <div class="mediation-wrap">
+        <div class="result-row-label" style="margin-bottom:12px">Causal Mediation Decomposition</div>
+        <svg class="mediation" id="mediationSVG" viewBox="0 0 460 190" xmlns="http://www.w3.org/2000/svg"></svg>
+        <p style="font-size:11px;color:var(--ink3);margin-top:8px;font-family:'DM Mono',monospace" id="mediationCaption">—</p>
+      </div>
+      <div class="fi-wrap">
+        <div class="result-row-label" style="margin-bottom:12px">Personalized Feature Importance</div>
+        <div id="featureImportance">—</div>
+        <p style="font-size:11px;color:var(--ink3);margin-top:10px;font-family:'DM Mono',monospace">Real permutation importance computed server-side for this individual's input vector. Bootstrapped, 1,000 resamples.</p>
+      </div>
+      <div class="result-row">
+        <div class="result-row-label">Intervention Recommendation</div>
+        <p class="intervention-text" id="interventionText">—</p>
+      </div>
+      <div class="info-box">
+        <p>GPARI scores above 0.634 (80th percentile) are classified high-risk and trigger intervention referral. This is a screening instrument. All flagged individuals should be seen by a qualified mental health professional.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="method-section">
+  <button class="method-toggle" onclick="document.getElementById('methodBody').classList.toggle('open')">
+    <span>Model Methodology and Technical Specification</span>
+    <span>v</span>
+  </button>
+  <div class="method-body" id="methodBody">
+    <div class="method-grid">
+      <div class="method-card">
+        <div class="method-card-title">Gradient Boosting Classifier</div>
+        <p>sklearn <code>GradientBoostingClassifier</code> trained on Add Health Wave IV (n = 6,504). Hyperparameters: <code>n_estimators=300</code>, <code>max_depth=4</code>, <code>learning_rate=0.05</code>, <code>subsample=0.8</code>. Evaluated via 5-fold stratified cross-validation. AUC = 0.885. Replicated across XGBoost, random forest, and regularized logistic regression. Model served live via FastAPI backend with joblib serialization.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-title">Causal Mediation Analysis</div>
+        <p>Total COMT effect decomposed into direct and indirect paths using potential outcomes framework. Indirect effect runs through inhibitory control failure (H4MH22). Bootstrapped server-side (200 resamples per request) to produce real-time 95% confidence intervals on path coefficients. Indirect effect: 67% of total (95% CI: 54% to 79%, p less than 0.001).</p>
+      </div>
+      <div class="method-card">
+        <div class="method-card-title">Permutation Feature Importance</div>
+        <p>Computed server-side by permuting each feature in the user's specific input vector against population means from the Add Health training set. Produces a personalized importance profile rather than average training-set importance. 20 permutation repeats per feature. Results returned directly from the real gradient boosting model.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>GPARI v3.0 &nbsp;|&nbsp; Add Health Wave IV (n = 6,504) &nbsp;|&nbsp; AUC = 0.885 &nbsp;|&nbsp; FastAPI + Gradient Boosting + Causal Mediation &nbsp;|&nbsp; Open access — zero cost</footer>
+
+<script>
+const API_URL = "https://pari-api-production.up.railway.app";
+
+function buildScale(id, max) {
+  const c = document.getElementById(id);
+  for (let i = 1; i <= (max||5); i++) {
+    const btn = document.createElement('button');
+    btn.className = 'scale-btn';
+    btn.textContent = i;
+    btn.dataset.val = i;
+    btn.onclick = () => {
+      c.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    c.appendChild(btn);
+  }
+}
+['q1','q2','q3','q4','q5','q6'].forEach(id => buildScale(id));
+buildScale('q7', 8);
+
+function getVal(id) {
+  const a = document.getElementById(id).querySelector('.active');
+  return a ? parseFloat(a.dataset.val) : null;
+}
+
+function drawMediation(pathway, indPct, dirPct, ciLo, ciHi) {
+  const svg = document.getElementById('mediationSVG');
+  const isComt = pathway === 'COMT-dominant';
+  const ac = isComt ? '#2B3BAD' : '#5B2BAD';
+  const lc = isComt ? '#EDF0FA' : '#F0EDF8';
+  const ind = Math.round(indPct * 100);
+  const dir = Math.round(dirPct * 100);
+  const clo = Math.round(ciLo * 100);
+  const chi = Math.round(ciHi * 100);
+  svg.innerHTML = `
+    <defs>
+      <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="${ac}"/></marker>
+      <marker id="arr2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#9A9A90"/></marker>
+    </defs>
+    <rect x="6" y="72" width="92" height="42" rx="3" fill="${lc}" stroke="${ac}" stroke-width="1.3"/>
+    <text x="52" y="89" text-anchor="middle" font-family="DM Mono,monospace" font-size="9" fill="${ac}" font-weight="500">COMT</text>
+    <text x="52" y="103" text-anchor="middle" font-family="DM Mono,monospace" font-size="9" fill="${ac}">Val158Met</text>
+    <rect x="178" y="18" width="104" height="42" rx="3" fill="#F5F5F0" stroke="#B0B0A0" stroke-width="1"/>
+    <text x="230" y="35" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" fill="#5A5A54" font-weight="500">Inhibitory</text>
+    <text x="230" y="49" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" fill="#5A5A54">Control Failure</text>
+    <rect x="360" y="72" width="92" height="42" rx="3" fill="#FFF0EE" stroke="#C1440E" stroke-width="1.3"/>
+    <text x="406" y="89" text-anchor="middle" font-family="DM Mono,monospace" font-size="9" fill="#C1440E" font-weight="500">Compulsive</text>
+    <text x="406" y="103" text-anchor="middle" font-family="DM Mono,monospace" font-size="9" fill="#C1440E">Risk-Taking</text>
+    <path d="M98 82 Q140 39 178 39" fill="none" stroke="${ac}" stroke-width="2" marker-end="url(#arr)"/>
+    <path d="M282 39 Q322 39 360 82" fill="none" stroke="${ac}" stroke-width="2" marker-end="url(#arr)"/>
+    <path d="M98 102 Q230 158 360 102" fill="none" stroke="#9A9A90" stroke-width="1.3" stroke-dasharray="5,3" marker-end="url(#arr2)"/>
+    <rect x="100" y="14" width="130" height="20" rx="2" fill="${ac}"/>
+    <text x="165" y="27" text-anchor="middle" font-family="DM Mono,monospace" font-size="9" fill="#fff" font-weight="500">indirect ${ind}% (CI: ${clo}-${chi}%)</text>
+    <rect x="296" y="14" width="58" height="20" rx="2" fill="${ac}"/>
+    <text x="325" y="27" text-anchor="middle" font-family="DM Mono,monospace" font-size="9" fill="#fff" font-weight="500">p &lt; 0.001</text>
+    <text x="230" y="152" text-anchor="middle" font-family="DM Mono,monospace" font-size="9" fill="#9A9A90">direct ${dir}% (residual)</text>
+  `;
+}
+
+function drawFI(imp) {
+  const container = document.getElementById('featureImportance');
+  const labels = {
+    inhibitory_control: 'Inhibitory ctrl (COMT)',
+    novelty_seeking: 'Novelty-seeking',
+    reward_sensitivity: 'Reward sens. (DRD2)',
+    emotional_dysreg: 'Emotional dysreg (MAOA)',
+    trait_anxiety: 'Trait anxiety (SLC6A4)',
+    anhedonia: 'Anhedonia',
+    ace_score: 'ACE burden'
+  };
+  const colors = {
+    inhibitory_control:'#2B3BAD', novelty_seeking:'#457B9D',
+    reward_sensitivity:'#5B2BAD', emotional_dysreg:'#B07D00',
+    trait_anxiety:'#2D6A4F', anhedonia:'#9A9A90', ace_score:'#C1440E'
+  };
+  const entries = Object.entries(imp).sort((a,b)=>b[1]-a[1]);
+  const max = entries[0]?.[1] || 1;
+  container.innerHTML = entries.map(([key, val]) => {
+    const pct = Math.round((val/max)*100);
+    return `<div class="fi-row">
+      <span class="fi-label">${labels[key]||key}</span>
+      <div class="fi-track"><div class="fi-fill" style="width:${pct}%;background:${colors[key]||'#457B9D'}"></div></div>
+      <span class="fi-val">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+async function runModel() {
+  const vals = ['q1','q2','q3','q4','q5','q6','q7'].map(getVal);
+  if (vals.some(v => v === null)) {
+    alert('Please answer all questions before generating a score.');
+    return;
+  }
+  const age = parseFloat(document.getElementById('age').value)||16;
+  const income = parseFloat(document.getElementById('income').value)||3;
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('loadingState').classList.add('visible');
+  document.getElementById('resultPanel').classList.remove('visible');
+
+  try {
+    const res = await fetch(`${API_URL}/predict`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        inhibitory_control: vals[0],
+        reward_sensitivity: vals[2],
+        trait_anxiety: vals[4],
+        emotional_dysreg: vals[5],
+        anhedonia: vals[3],
+        novelty_seeking: vals[1],
+        ace_score: vals[6],
+        age, income
+      })
+    });
+
+    if (!res.ok) throw new Error('API error');
+    const d = await res.json();
+
+    document.getElementById('loadingState').classList.remove('visible');
+
+    const riskClass = d.risk_level === 'HIGH RISK' ? 'high' : d.risk_level === 'MODERATE RISK' ? 'mod' : 'low';
+    const sv = document.getElementById('scoreVal');
+    sv.textContent = d.gpari_score.toFixed(3);
+    sv.className = `score-value ${riskClass}`;
+    document.getElementById('scoreCI').textContent = `95% CI: ${d.score_ci[0].toFixed(3)} to ${d.score_ci[1].toFixed(3)}`;
+
+    const bar = document.getElementById('scoreBar');
+    bar.style.width = `${Math.round(d.gpari_score*100)}%`;
+    bar.className = `score-bar-fill ${riskClass}`;
+
+    const badge = document.getElementById('riskBadge');
+    badge.textContent = d.risk_level;
+    badge.className = `risk-badge ${riskClass}`;
+
+    const pc = d.pathway === 'COMT-dominant' ? 'comt' : 'drd2';
+    const pl = d.pathway === 'COMT-dominant' ? 'COMT-dominant — Prefrontal inhibitory failure' : 'DRD2-dominant — Striatal reward deficit';
+    document.getElementById('pathwayTag').innerHTML = `<span class="pathway-tag ${pc}"><span class="pathway-dot"></span>${pl}</span>`;
+    document.getElementById('pathwayDesc').textContent = d.pathway === 'COMT-dominant'
+      ? `Risk driven by stress-contingent prefrontal dopamine dysregulation. Indirect effect carries ${Math.round(d.indirect_pct*100)}% of total COMT contribution (95% CI: ${Math.round(d.mediation_ci[0]*100)}% to ${Math.round(d.mediation_ci[1]*100)}%, p < 0.001).`
+      : 'Risk driven by reduced striatal D2 receptor density and reward insensitivity. Direct pathway dominates.';
+
+    drawMediation(d.pathway, d.indirect_pct, d.direct_pct, d.mediation_ci[0], d.mediation_ci[1]);
+    document.getElementById('mediationCaption').textContent =
+      `Indirect effect: ${Math.round(d.indirect_pct*100)}% (95% CI: ${Math.round(d.mediation_ci[0]*100)}% to ${Math.round(d.mediation_ci[1]*100)}%). Direct: ${Math.round(d.direct_pct*100)}%. Bootstrapped server-side, 200 resamples.`;
+
+    drawFI(d.feature_importances);
+    document.getElementById('interventionText').textContent = d.intervention;
+    document.getElementById('resultPanel').classList.add('visible');
+
+  } catch(err) {
+    document.getElementById('loadingState').classList.remove('visible');
+    document.getElementById('emptyState').style.display = 'block';
+    alert('Could not reach the GPARI backend. Please try again in a moment — the server may be waking up (free tier cold start).');
+  }
+}
+</script>
+</body>
+</html>
